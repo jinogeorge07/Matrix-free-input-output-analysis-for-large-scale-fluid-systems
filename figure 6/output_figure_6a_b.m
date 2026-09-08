@@ -9,7 +9,7 @@ cd(folderpath)
 %results_file = 'resolvent_results_matrixfree_NxNy116.mat';
 
 % Output folder
-out_dir = 'output_figure_6a,b';
+out_dir = 'output_figure_6a_b';
 
 % Plot controls
 plot_log_scale = true;
@@ -258,9 +258,6 @@ end
 %% ========================= CSV OUTPUT ===================================
 writematrix(real_u_resp,fullfile(out_dir,'real_u_resp.csv'));
 writematrix(real_u_forc,fullfile(out_dir,'real_u_forc.csv'));
-
-% writematrix(real_v_resp,fullfile(out_dir,'real_v_resp.csv'));
-% writematrix(real_w_resp,fullfile(out_dir,'real_w_resp.csv'));
 
 fprintf('Postprocessing complete. Outputs saved in "%s"\n',out_dir);
 

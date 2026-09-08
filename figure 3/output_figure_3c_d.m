@@ -6,10 +6,9 @@ clearvars; close all; clc;
 folderpath = './'
 cd(folderpath)
 
-
 % --- PARAMETERS you can edit ---
 results_file = 'resolvent_results_full_120.mat';   % file produced by your run
-out_dir = 'output_figure_3c,d';               % where figures and data will be saved
+out_dir = 'output_figure_3c_d';               % where figures and data will be saved
 
 plot_log_scale = true;                     % use semilogy for sigma plot
 save_mat_processed = true;                 % save processed arrays
@@ -55,23 +54,6 @@ if size(U_full,1) ~= 3*N
     error('Unexpected U_full size: expected 3*N rows (3*%d), got %d', N, size(U_full,1));
 end
 
-% --- singular values ---
-singvals = diag(S_full);
-nsv = numel(singvals);
-
-% Plot singular values
-fig = figure('Visible','off');
-if plot_log_scale
-    semilogy(1:nsv, singvals, 'o-', 'LineWidth', 1.5);
-else
-    plot(1:nsv, singvals, 'o-', 'LineWidth', 1.5);
-end
-xlabel('singular value index'); ylabel('\sigma'); grid on;
-title('Singular values (matrix-free)');
-saveas(fig, fullfile(out_dir,'singular_values.png'));
-saveas(fig, fullfile(out_dir,'singular_values.fig'));
-close(fig);
-
 Uvec = U_full(:,1).*params.w_all.^(-1/2);
 Vvec =  V_full(:,1).*params.w_all.^(-1/2);
 
@@ -115,6 +97,7 @@ for k = 1:3
     contourf(x, y, resp_cells{k},40); axis xy; cb = colorbar;
 
     clim_val = max(abs(resp_cells{k}(:)));
+
     if clim_val == 0
         clim_val = eps;
     end
@@ -169,14 +152,14 @@ for k = 1:3
     contourf(x, y, forc_cells{k},40); axis xy; cb = colorbar;
 
     clim_val = max(abs(forc_cells{k}(:)));
+   
     if clim_val == 0
         clim_val = eps;
     end
-
     ax = gca;
     % --- Same ordering/style as the response loop above. ---
     clim(ax,[-clim_val, clim_val]);
-
+    
     cb = colorbar;
     cb.Ticks = linspace(-clim_val,clim_val,7);
     cb.TickLabels = strip_zeros(compose('%.4f',cb.Ticks));
@@ -208,8 +191,7 @@ for k = 1:3
     close(fig);
 end
 
-
-% --- optionally write CSVs for quick inspection in Python/R ---
+% --- optionally write CSVs---
 
 writematrix(real_u_resp, fullfile(out_dir,'real_u_resp.csv'));
 writematrix(real_u_forc, fullfile(out_dir,'real_x_forc.csv'));

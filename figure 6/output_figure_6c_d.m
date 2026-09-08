@@ -105,7 +105,7 @@ end
 
 
 %% ========================= OUTPUT FOLDER ================================
-snapdir = 'output_figure_6c,d';
+snapdir = 'output_figure_6c_d';
 if ~exist(snapdir,'dir')
     mkdir(snapdir);
 end
