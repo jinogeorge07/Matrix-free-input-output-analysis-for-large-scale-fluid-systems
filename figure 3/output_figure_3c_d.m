@@ -2,17 +2,15 @@
 % Load resolvent_results.mat and produce plots / saved data for postprocessing
 
 clearvars; close all; clc;
-
-%folderpath = 'E:\input-otuput matrix free results\matlab_26704037';
-folderpath = 'E:\input-otuput matrix free results\compare results\matlab_26862155_compare_matrix';
-%folderpath = 'E:\input-otuput matrix free results\matlab_26983385_300x300_matrix_free';
-% C:\Users\jinog\Documents\MATLAB
+% %% ========================= USER INPUTS ==================================
+folderpath = './'
 cd(folderpath)
 
 
 % --- PARAMETERS you can edit ---
 results_file = 'resolvent_results_full_120.mat';   % file produced by your run
-out_dir = 'postproc_output_full';               % where figures and data will be saved
+out_dir = 'output_figure_3c,d';               % where figures and data will be saved
+
 plot_log_scale = true;                     % use semilogy for sigma plot
 save_mat_processed = true;                 % save processed arrays
 %colormap_choice = turbo(256);
@@ -74,11 +72,6 @@ saveas(fig, fullfile(out_dir,'singular_values.png'));
 saveas(fig, fullfile(out_dir,'singular_values.fig'));
 close(fig);
 
-% --- reshape left singular vector (response) and right singular vector (forcing) ---
-% ordering in code: [u; v; w] each of length N (Ny*Nx)
-% Uvec = U_full(:,1);   % left singular vector for largest sigma
-% Vvec = V_full(:,1);   % right singular vector for largest sigma
-
 Uvec = U_full(:,1).*params.w_all.^(-1/2);
 Vvec =  V_full(:,1).*params.w_all.^(-1/2);
 
@@ -98,11 +91,6 @@ abs_u_forc = abs(u_forc);
 abs_v_forc = abs(v_forc);
 abs_w_forc = abs(w_forc);
 
-% --- FIX: real part for the symmetric-about-0 2D colorbar plots. ---
-% bluewhitered is a diverging colormap (white at 0, color on either
-% side) -- that only makes sense for signed data. abs(...) is always
-% >=0, so no color limits could ever be made symmetric about 0 for it.
-% real(...) genuinely has both signs, which is what the diverging
 % colormap is actually for.
 real_u_resp = real(u_resp);
 real_v_resp = real(v_resp);
@@ -172,6 +160,7 @@ for k = 1:3
 end
 
 % --- 2D contour plots of forcing components (real part, symmetric colorbar) ---
+comp_names = {'x','y','z'};
 forc_cells = {real_u_forc, real_v_forc, real_w_forc};
 for k = 1:3
     fig = figure('Visible','off','Units','pixels','Position',[100 100 1900 1300]);
@@ -219,73 +208,14 @@ for k = 1:3
     close(fig);
 end
 
-% --- x-averaged wall-normal profiles (|.| averaged over x) ---
-% Unchanged: magnitude is the right quantity for a profile plot (no
-% colorbar involved here, so the symmetric-about-0 fix doesn't apply).
-ux_profile = mean(abs_u_resp,2);
-vx_profile = mean(abs_v_resp,2);
-wx_profile = mean(abs_w_resp,2);
-
-fig = figure('Visible','off');
-plot(ux_profile, y, '-o', 'LineWidth', 1.2); hold on;
-plot(vx_profile, y, '-s', 'LineWidth', 1.2);
-plot(wx_profile, y, '-^', 'LineWidth', 1.2);
-xlabel('x-averaged |component|'); ylabel('y'); grid on;
-legend('|u|','|v|','|w|','Location','best');
-title('Wall-normal profiles (x-averaged) of response');
-saveas(fig, fullfile(out_dir,'resp_profiles_xavg.png'));
-saveas(fig, fullfile(out_dir,'resp_profiles_xavg.fig'));
-close(fig);
-
-% --- x-slice at center (x index) ---
-ix_center = ceil(Nx/2);
-fig = figure('Visible','off');
-plot(y, abs_u_resp(:,ix_center), '-o', 'LineWidth', 1.2); hold on;
-plot(y, abs_v_resp(:,ix_center), '-s', 'LineWidth', 1.2);
-plot(y, abs_w_resp(:,ix_center), '-^', 'LineWidth', 1.2);
-xlabel('y'); ylabel('|component| at x_{center}'); grid on;
-legend('|u|','|v|','|w|','Location','best');
-title(sprintf('Wall-normal slice at x index %d', ix_center));
-saveas(fig, fullfile(out_dir,'resp_slice_xcenter.png'));
-saveas(fig, fullfile(out_dir,'resp_slice_xcenter.fig'));
-close(fig);
-
-% --- energy norm of response and forcing (global) ---
-% Unchanged: these are norms, magnitude (abs) is the correct quantity.
-E_resp = sum(abs(Uvec).^2);
-E_forc = sum(abs(Vvec).^2);
-fid = fopen(fullfile(out_dir,'energy_summary.txt'),'w');
-fprintf(fid,'Largest singular value (sigma): %g\n', singvals(1));
-fprintf(fid,'Response energy (||U||^2): %g\n', E_resp);
-fprintf(fid,'Forcing energy (||V||^2): %g\n', E_forc);
-fclose(fid);
-
-% --- save processed arrays for later postprocessing ---
-if save_mat_processed
-    save(fullfile(out_dir,'processed_fields.mat'), ...
-        'u_resp','v_resp','w_resp', ...
-        'u_forc','v_forc','w_forc', ...
-        'abs_u_resp','abs_v_resp','abs_w_resp', ...
-        'abs_u_forc','abs_v_forc','abs_w_forc', ...
-        'real_u_resp','real_v_resp','real_w_resp', ...
-        'real_u_forc','real_v_forc','real_w_forc', ...
-        'x','y','singvals','sigma_full','params','-v7.3');
-end
 
 % --- optionally write CSVs for quick inspection in Python/R ---
-% Kept the original abs(...) exports so nothing existing breaks, and
-% added real(...) exports since that's what the 2D plots now show.
-writematrix(abs_u_resp, fullfile(out_dir,'abs_u_resp.csv'));
-writematrix(abs_v_resp, fullfile(out_dir,'abs_v_resp.csv'));
-writematrix(abs_w_resp, fullfile(out_dir,'abs_w_resp.csv'));
 
 writematrix(real_u_resp, fullfile(out_dir,'real_u_resp.csv'));
-writematrix(real_v_resp, fullfile(out_dir,'real_v_resp.csv'));
-writematrix(real_w_resp, fullfile(out_dir,'real_w_resp.csv'));
+writematrix(real_u_forc, fullfile(out_dir,'real_x_forc.csv'));
 
 % --- final message ---
 fprintf('Postprocessing complete. Outputs saved in "%s"\n', out_dir);
-
 
 %% ========================= LOCAL FUNCTION ===============================
 % Copied from the input-output postprocessing script so tick labels
