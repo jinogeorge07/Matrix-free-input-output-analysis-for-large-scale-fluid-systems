@@ -28,12 +28,6 @@ if ~exist(out_dir,'dir')
     mkdir(out_dir);
 end
 
-U_mf = S.U_mf;
-S_mf = S.S_mf;
-V_mf = S.V_mf;
-params = S.params;
-sigma_mf = S.sigma_mf;
-
 % --- grid sizes and indexing ---
 Nx = 300;
 Ny = 300;
@@ -42,9 +36,15 @@ Lx = 2*pi;
 Ly = 2;
 Re = 358;
 
-load('real_u_forc.mat');
-load('real_v_forc.mat');
-load('real_w_forc.mat');
+S1 = load('real_u_forc.mat');
+real_x_forc = S1.real_u_forc;
+
+S2 = load('real_v_forc.mat');
+real_y_forc = S2.real_v_forc;
+
+S3 = load('real_w_forc.mat');
+real_z_forc = S3.real_w_forc;
+
 load('real_u_resp.mat');
 load('real_v_resp.mat');
 load('real_w_resp.mat');
@@ -54,7 +54,7 @@ load('y.mat');
 % --- 2D contour plots of response components (real part, symmetric colorbar) ---
 comp_names = {'u','v','w'};
 resp_cells = {real_u_resp, real_v_resp, real_w_resp};
-for k = 1:3
+for k = 1:1
     fig = figure('Visible','off','Units','pixels','Position',[100 100 1900 1300]);
 
     %imagesc(x, y, resp_cells{k}); axis xy; cb = colorbar;
@@ -101,8 +101,9 @@ for k = 1:3
 end
 
 % --- 2D contour plots of forcing components (real part, symmetric colorbar) ---
-forc_cells = {real_u_forc, real_v_forc, real_w_forc};
-for k = 1:3
+comp_names = {'x','y','z'};
+forc_cells = {real_x_forc, real_y_forc, real_z_forc};
+for k = 1:1
     fig = figure('Visible','off','Units','pixels','Position',[100 100 1900 1300]);
     %     imagesc(x, y, forc_cells{k}); axis xy; cb = colorbar;
     contourf(x, y, forc_cells{k},40); axis xy; cb = colorbar;
@@ -146,69 +147,9 @@ for k = 1:3
     close(fig);
 end
 
-% --- x-averaged wall-normal profiles (|.| averaged over x) ---
-% Unchanged: magnitude is the right quantity for a profile plot (no
-% colorbar involved here, so the symmetric-about-0 fix doesn't apply).
-ux_profile = mean(abs_u_resp,2);
-vx_profile = mean(abs_v_resp,2);
-wx_profile = mean(abs_w_resp,2);
-
-fig = figure('Visible','off');
-plot(ux_profile, y, '-o', 'LineWidth', 1.2); hold on;
-plot(vx_profile, y, '-s', 'LineWidth', 1.2);
-plot(wx_profile, y, '-^', 'LineWidth', 1.2);
-xlabel('x-averaged |component|'); ylabel('y'); grid on;
-legend('|u|','|v|','|w|','Location','best');
-title('Wall-normal profiles (x-averaged) of response');
-saveas(fig, fullfile(out_dir,'resp_profiles_xavg.png'));
-saveas(fig, fullfile(out_dir,'resp_profiles_xavg.fig'));
-close(fig);
-
-% --- x-slice at center (x index) ---
-ix_center = ceil(Nx/2);
-fig = figure('Visible','off');
-plot(y, abs_u_resp(:,ix_center), '-o', 'LineWidth', 1.2); hold on;
-plot(y, abs_v_resp(:,ix_center), '-s', 'LineWidth', 1.2);
-plot(y, abs_w_resp(:,ix_center), '-^', 'LineWidth', 1.2);
-xlabel('y'); ylabel('|component| at x_{center}'); grid on;
-legend('|u|','|v|','|w|','Location','best');
-title(sprintf('Wall-normal slice at x index %d', ix_center));
-saveas(fig, fullfile(out_dir,'resp_slice_xcenter.png'));
-saveas(fig, fullfile(out_dir,'resp_slice_xcenter.fig'));
-close(fig);
-
-% --- energy norm of response and forcing (global) ---
-% Unchanged: these are norms, magnitude (abs) is the correct quantity.
-E_resp = sum(abs(Uvec).^2);
-E_forc = sum(abs(Vvec).^2);
-fid = fopen(fullfile(out_dir,'energy_summary.txt'),'w');
-fprintf(fid,'Largest singular value (sigma): %g\n', singvals(1));
-fprintf(fid,'Response energy (||U||^2): %g\n', E_resp);
-fprintf(fid,'Forcing energy (||V||^2): %g\n', E_forc);
-fclose(fid);
-
-% --- save processed arrays for later postprocessing ---
-if save_mat_processed
-    save(fullfile(out_dir,'processed_fields.mat'), ...
-        'u_resp','v_resp','w_resp', ...
-        'u_forc','v_forc','w_forc', ...
-        'abs_u_resp','abs_v_resp','abs_w_resp', ...
-        'abs_u_forc','abs_v_forc','abs_w_forc', ...
-        'real_u_resp','real_v_resp','real_w_resp', ...
-        'real_u_forc','real_v_forc','real_w_forc', ...
-        'x','y','singvals','sigma_mf','params','-v7.3');
-end
-
 % --- optionally write CSVs for quick inspection in Python/R ---
-% Kept the original abs(...) exports so nothing existing breaks, and
-% added real(...) exports since that's what the 2D plots now show.
-writematrix(abs_u_resp, fullfile(out_dir,'abs_u_resp.csv'));
-writematrix(abs_v_resp, fullfile(out_dir,'abs_v_resp.csv'));
-writematrix(abs_w_resp, fullfile(out_dir,'abs_w_resp.csv'));
-
 writematrix(real_u_resp, fullfile(out_dir,'real_u_resp.csv'));
-writematrix(real_v_resp, fullfile(out_dir,'real_v_resp.csv'));
-writematrix(real_w_resp, fullfile(out_dir,'real_w_resp.csv'));
+writematrix(real_x_forc, fullfile(out_dir,'real_x_forc.csv'));
 
 % --- final message ---
 fprintf('Postprocessing complete. Outputs saved in "%s"\n', out_dir);
