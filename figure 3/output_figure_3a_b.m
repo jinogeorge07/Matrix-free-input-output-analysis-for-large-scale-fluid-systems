@@ -3,21 +3,15 @@
 
 clearvars; close all; clc;
 
-%folderpath = 'E:\input-otuput matrix free results\matlab_26704037';
-%folderpath = 'E:\input-otuput matrix free results\compare results\matlab_26862155_compare_matrix';
-%folderpath = 'E:\input-otuput matrix free results\matlab_26983385_300x300_matrix_free';
-folderpath = 'E:\input-otuput matrix free results\symmetric wavywall\matlab_43905321_400x400_matrixfree_kz1.0';
-
-%E:\input-otuput matrix free results\matlab_26983385_300x300_matrix_free
-% C:\Users\jinog\Documents\MATLAB
+% %% ========================= USER INPUTS ==================================
+folderpath = './'
 cd(folderpath)
 
+% Results file produced by the resolvent run
+%results_file = 'resolvent_results_matrixfree_NxNy116.mat';
 
-% --- PARAMETERS you can edit ---
-results_file = 'resolvent_results_matrixfree_NxNy400.mat';   % file produced by your run
-%results_file = 'resolvent_results_matrixfree_NxNy300';   % file produced by your run
-
-out_dir = 'postproc_output_mf_400x400';               % where figures and data will be saved
+% Output folder
+out_dir = 'output_figure_3a,b';
 plot_log_scale = true;                     % use semilogy for sigma plot
 save_mat_processed = false;                 % save processed arrays
 %colormap_choice = turbo(256);
@@ -34,21 +28,6 @@ if ~exist(out_dir,'dir')
     mkdir(out_dir);
 end
 
-% --- load results ---
-if ~isfile(results_file)
-    error('Results file not found: %s', results_file);
-end
-S = load(results_file);
-
-% % Required variables check
-required = {'U_mf','S_mf','V_mf','params','sigma_mf'};
-for k = 1:numel(required)
-    if ~isfield(S, required{k})
-        error('Missing variable "%s" in %s', required{k}, results_file);
-    end
-end
-
-
 U_mf = S.U_mf;
 S_mf = S.S_mf;
 V_mf = S.V_mf;
@@ -56,70 +35,21 @@ params = S.params;
 sigma_mf = S.sigma_mf;
 
 % --- grid sizes and indexing ---
-Nx = params.Nx;
-Ny = params.Ny;
+Nx = 300;
+Ny = 300;
 N = Nx*Ny;
-if size(U_mf,1) ~= 3*N
-    error('Unexpected U_mf size: expected 3*N rows (3*%d), got %d', N, size(U_mf,1));
-end
+Lx = 2*pi;
+Ly = 2;
+Re = 358;
 
-% --- singular values ---
-singvals = diag(S_mf);
-nsv = numel(singvals);
-
-% Plot singular values
-fig = figure('Visible','off');
-if plot_log_scale
-    semilogy(1:nsv, singvals, 'o-', 'LineWidth', 1.5);
-else
-    plot(1:nsv, singvals, 'o-', 'LineWidth', 1.5);
-end
-xlabel('singular value index'); ylabel('\sigma'); grid on;
-title('Singular values (matrix-free)');
-saveas(fig, fullfile(out_dir,'singular_values.png'));
-saveas(fig, fullfile(out_dir,'singular_values.fig'));
-close(fig);
-
-% --- reshape left singular vector (response) and right singular vector (forcing) ---
-% ordering in code: [u; v; w] each of length N (Ny*Nx)
-Uvec = U_mf(:,1).*params.w_all.^(-1/2);
-Vvec = V_mf(:,1).*params.w_all.^(-1/2);
-
-
-u_resp = reshape(Uvec(1:N), Ny, Nx);
-v_resp = reshape(Uvec(N+1:2*N), Ny, Nx);
-w_resp = reshape(Uvec(2*N+1:3*N), Ny, Nx);
-
-u_forc = reshape(Vvec(1:N), Ny, Nx);
-v_forc = reshape(Vvec(N+1:2*N), Ny, Nx);
-w_forc = reshape(Vvec(2*N+1:3*N), Ny, Nx);
-
-% compute absolute magnitudes (kept for the wall-normal profile/slice
-% plots below, and for the energy-norm summary -- magnitude is the
-% right quantity there, it's only the 2D colorbar plots that needed
-% signed data instead).
-abs_u_resp = abs(u_resp);
-abs_v_resp = abs(v_resp);
-abs_w_resp = abs(w_resp);
-
-abs_u_forc = abs(u_forc);
-abs_v_forc = abs(v_forc);
-abs_w_forc = abs(w_forc);
-
-
-real_u_resp = real(u_resp);
-real_v_resp = real(v_resp);
-real_w_resp = real(w_resp);
-
-real_u_forc = real(u_forc);
-real_v_forc = real(v_forc);
-real_w_forc = real(w_forc);
-
-% --- coordinate vectors (y from cheb points, x uniform Fourier) ---
-y = params.cheb_y;            % cheb points in [-1,1] (size Ny)
-% build x vector consistent with fourdif scaling (0..Lx)
-%x = linspace(0, params.Lx, Nx+1); x = x(1:end-1);  % Nx points periodic
-x = linspace(0, params.Lx, Nx+1); x = x(1:end-1);  % Nx points periodic
+load('real_u_forc.mat');
+load('real_v_forc.mat');
+load('real_w_forc.mat');
+load('real_u_resp.mat');
+load('real_v_resp.mat');
+load('real_w_resp.mat');
+load('x.mat');
+load('y.mat');
 
 % --- 2D contour plots of response components (real part, symmetric colorbar) ---
 comp_names = {'u','v','w'};
@@ -146,11 +76,11 @@ for k = 1:3
     colormap(ax,bluewhitered(256));
 
     % Domain limits
-    xlim(ax,[0 params.Lx]);
+    xlim(ax,[0 Lx]);
     ylim(ax,[min(y) max(y)]);
 
     % Same tick layout as wavy-wall plots
-    ax.XTick = linspace(0,params.Lx,4);
+    ax.XTick = linspace(0,Lx,4);
     ax.YTick = linspace(min(y),max(y),5);
 
     ax.XTickLabel = strip_zeros(compose('%.1f',ax.XTick));
@@ -193,11 +123,11 @@ for k = 1:3
     colormap(ax,bluewhitered(256));
 
     % Domain limits
-    xlim(ax,[0 params.Lx]);
+    xlim(ax,[0 Lx]);
     ylim(ax,[min(y) max(y)]);
 
     % Same tick layout as wavy-wall plots
-    ax.XTick = linspace(0,params.Lx,4);      % 4 x-ticks including 0 and Lx
+    ax.XTick = linspace(0,Lx,4);      % 4 x-ticks including 0 and Lx
     ax.YTick = linspace(min(y),max(y),5);    % 5 y-ticks including top/bottom
 
     ax.XTickLabel = strip_zeros(compose('%.1f',ax.XTick));
