@@ -15,8 +15,8 @@ load dUdy_mean_zt.mat
 load dVdx_mean_zt.mat
 load dVdy_mean_zt.mat
 
-Ny=30;
-Nx=30;
+Ny=140;
+Nx=140;
 epsilon = 0.12;
 h = 1; y0 = h;
 A1 = epsilon; A2 = epsilon;
