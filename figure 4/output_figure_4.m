@@ -27,7 +27,8 @@ idx_sp_cf = strcmp(T.MatrixFree_sparseMatrix,'sparse matrix') & strcmp(T.Channel
 idx_sp_ww = strcmp(T.MatrixFree_sparseMatrix,'sparse matrix') & strcmp(T.Channelflow_WavyWall,'Wavy wall');
 
 %% ---- Figure/axes ----
-fig1 = figure('Units','normalized','Position',[0.12 0.12 0.62 0.58],'Color','w');
+%fig1 = figure('Units','normalized','Position',[0.12 0.12 0.62 0.58],'Color','w');
+fig1 = figure('Units','inches','Position',[1 1 16.53 8.7],'Color','w');
 ax = axes(fig1); hold(ax,'on'); box(ax,'on');
 
 % Sparse matrix -- channel flow: filled circle, solid line
@@ -52,6 +53,7 @@ h_mf_ww = loglog(ax, T.N(idx_mf_ww), T.memory_GB_(idx_mf_ww), 's--', ...
 
 %% ---- Axes formatting ----
 set(ax, 'XScale', 'log', 'YScale', 'log');
+
 grid(ax, 'on');
 ax.GridLineStyle = '-';   ax.GridAlpha = 0.25;
 ax.MinorGridLineStyle = ':'; ax.MinorGridAlpha = 0.15;

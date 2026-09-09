@@ -1,5 +1,4 @@
 %% Plot CPU time vs Grid Size for Channel Flow and Wavy Wall (Matrix-free vs Sparse)
-
 clearvars; close all; clc;
 
 folderpath = './'
@@ -20,13 +19,6 @@ C_MF_WW = [0.8500 0.3250 0.0980]; % orange
 C_SP_CF = [0.6350 0.0780 0.1840]; % red
 C_SP_WW = [0.1059 0.6863 0.4784];   % teal/green
 
-
-% %% ---- Series masks ----
-idx_mf_cf = strcmp(T.MatrixFree_sparseMatrix,'matrix free') & strcmp(T.Channelflow_WavyWall,'Channel flow');
-idx_mf_ww = strcmp(T.MatrixFree_sparseMatrix,'matrix free') & strcmp(T.Channelflow_WavyWall,'Wavy wall');
-idx_sp_cf = strcmp(T.MatrixFree_sparseMatrix,'sparse matrix') & strcmp(T.Channelflow_WavyWall,'Channel flow');
-idx_sp_ww = strcmp(T.MatrixFree_sparseMatrix,'sparse matrix') & strcmp(T.Channelflow_WavyWall,'Wavy wall');
-
 %% ---- Series masks ----
 idx_mf_cf = strcmp(T.MatrixFree_sparseMatrix,'matrix free') & strcmp(T.Channelflow_WavyWall,'Channel flow');
 idx_mf_ww = strcmp(T.MatrixFree_sparseMatrix,'matrix free') & strcmp(T.Channelflow_WavyWall,'Wavy wall');
@@ -34,7 +26,8 @@ idx_sp_cf = strcmp(T.MatrixFree_sparseMatrix,'sparse matrix') & strcmp(T.Channel
 idx_sp_ww = strcmp(T.MatrixFree_sparseMatrix,'sparse matrix') & strcmp(T.Channelflow_WavyWall,'Wavy wall');
  
 %% ---- Figure/axes ----
-fig = figure('Units','normalized','Position',[0.12 0.12 0.62 0.58],'Color','w');
+%fig = figure('Units','normalized','Position',[0.12 0.12 0.62 0.58],'Color','w');
+fig = figure('Units','inches','Position',[1 1 16.53 8.7],'Color','w');
 ax = axes(fig); hold(ax,'on'); box(ax,'on');
  
 % Sparse matrix -- channel flow: filled triangle, dashed line
