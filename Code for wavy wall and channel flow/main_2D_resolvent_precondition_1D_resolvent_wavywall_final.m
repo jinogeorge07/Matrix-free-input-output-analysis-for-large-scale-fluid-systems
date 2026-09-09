@@ -24,7 +24,6 @@ Lx = 2.4
 Ly1 = 1.0 + 1.0999*epsilon; % Half-height
 Re = 500;
 
-%mask_smooth_wavywall_Re500_156x116_epsilon_0.12
 fname = sprintf('mask_smooth_wavywall_Re%d_%dx%d_epsilon_%.2f.mat', Re, Ny, Nx, epsilon);
 load(fname);
 
