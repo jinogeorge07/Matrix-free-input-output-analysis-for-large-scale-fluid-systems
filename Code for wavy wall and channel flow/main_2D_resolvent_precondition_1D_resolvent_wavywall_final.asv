@@ -183,8 +183,8 @@ assert(all(isfinite(params.V_mat),'all'), ...
     'V interpolation contains NaN or Inf values.');
 
 
-benchmark_Nx_list = [30 60 100 140];
-benchmark_Ny_list = [30 60 100 140];
+benchmark_Nx_list = [12 24 36 48 80 120 140];
+benchmark_Ny_list = [12 24 36 48 80 120 140];
 
 nsv = 1;
 opts.tol = 1e-3;
@@ -519,6 +519,14 @@ end
 function params=prepare_params(params)
 Ny=params.Ny;
 Nx=params.Nx;
+%     [params.cheb_y,DM]=chebdif(Ny,2);
+%     params.Dy_mat=(2/params.Ly)*DM(:,:,1);
+%     params.Dyy_mat=(2/params.Ly)^2*DM(:,:,2);
+%
+%     [x,Dx_mat]=fourdif(Nx,1);
+%     [~,Dxx_mat]=fourdif(Nx,2);
+%     params.Dx_mat=(2*pi/params.Lx)*Dx_mat;
+%     params.Dxx_mat=(2*pi/params.Lx)^2*Dxx_mat;
 N=params.N;
 
 %vectorized velocity and velocity gradient that will be used to form
@@ -638,6 +646,8 @@ K_inv=params.K_inv_xave_diag;
 
 scalar_A=-1i*params.omega*I-U*Dx_k-V*params.Dy_mat-lap_k/Re+K_inv;
 
+
+
 P=[scalar_A, Z, Z, Dx_k; ...
     dUdy, scalar_A+dVdy, Z, params.Dy_mat; ...
     Z, Z, scalar_A, 1i*kz*I; ...
@@ -681,6 +691,9 @@ for j = 1:size(U,2)
 end
 end
 
+%% boundary condition and matrix free wrapper for H_mf: returns Hf for forward ('notransp')
+%% and H* f for adjoint for 'transp'
+%H_f = Hf or H_fun = H*f is the function
 function H_f=H_fun(f,tflag,params)
 
 global gmres_info
@@ -693,6 +706,10 @@ w_all=params.w_all;
 %if strcmp(tflag,'notransp')
 Bf=[f.*w_all.^(-1/2);
     zeros(N,1)];
+% else
+%     Bf=[f.*w_all.^(1/2);
+%         zeros(N,1)];
+% end
 
 %B.C. for u
 left_bc=1:Ny:N;
@@ -713,19 +730,29 @@ tol = params.gmres_tol;
 restart = params.gmres_restart;%min(100,4*Ny);
 maxit = params.gmres_maxit;
 
+%% H = CL^-1B ; H* = B*(L*)^-1 C*
+%% L_inv_u_p = q , where L_fun x q = Bf; q = [u;v;w;p] so this gives us the input in input-output
+%% q = (M^-1L)^-1 M^-1Bf
 [L_inv_u_p,flag,relres,iter,resvec] = gmres(@(u_p) L_fun(u_p,tflag,params),Bf, ...
     restart,tol,maxit,@(rhs) laplacian_preconditioner_fun(rhs,tflag,params));
 
 gmres_info(end+1,:) = {height(gmres_info)+1,{tflag}, ...
         iter(1),iter(2),numel(resvec)-1,flag,relres};
-
+% if strcmp(tflag,'notransp')
+%% H_f = C*q, C = w_all^(1/2)* diag(I,I,I,0)
+%% C = w_all^(1/2)* diag(I,I,I,0)
 H_f = w_all.^(1/2).*L_inv_u_p(1:3*N,1); % weighted input q, this is fed into svds
+   
+% else
+%     H_f = w_all.^(-1/2).*L_inv_u_p(1:3*N,1);
+% end
 
 end
 
 
 function z=laplacian_preconditioner_fun(rhs,tflag,params)
-
+%Ny=params.Ny;
+%Nx=params.Nx;
 N=params.N;
 
 if strcmp(params.preconditioner_type,'fft_1d_laplacian')
@@ -849,6 +876,16 @@ end
 
 function [H,L]=resolvent_2D_xy(params)
 
+% f_test = randn(3*N,1) + 1i*randn(3*N,1);
+% 
+% Hf_mf   = H_fun(f_test,'notransp',params);
+% Hf_full = H*f_test;
+% 
+% H_action_error = norm(Hf_mf-Hf_full)/norm(Hf_full);
+% 
+% fprintf('Forward H-action error = %.3e\n',H_action_error);
+
+% kx=params.kx;
 kz=params.kz;
 omega=params.omega;
 Ny=params.Ny;
@@ -862,6 +899,21 @@ Re=params.Re;
 Ix=speye(Nx);
 Iy=speye(Ny);
 
+% [~,DM] = chebdif(Ny,2);
+% D1 = (2/Ly)*DM(1:Ny,1:Ny,1);
+% D2 = (2/Ly)^2*DM(1:Ny,1:Ny,2);
+% 
+% %Dy_2D = kron(Ix,Dy);
+% %Dyy_2D = kron(Ix,Dyy);
+% 
+% [~,Dx] = fourdif(Nx,1);
+% Dx = (2*pi/Lx)*Dx;
+% 
+% [~,Dxx] = fourdif(Nx,2);
+% Dxx = (2*pi/Lx)^2*Dxx;
+% %Dx_2D = kron(Dx,Iy);
+% %Dyy_2D = kron(Dxx,Iy);
+
 % Use the identical discrete operators as the matrix-free formulation.
 D1  = params.Dy_mat;
 D2  = params.Dyy_mat;
@@ -870,6 +922,9 @@ Dxx = params.Dxx_mat;
 I = speye(N);
 
 lplc = -kz^2*I + kron(Ix,D2) + kron(Dxx,Iy); % sparse
+
+% U0 = 1-y.^2;
+% U1 = -2*y;
 
 U = spdiags(params.U,0,N,N);
 dUdx = spdiags(params.dUdx,0,N,N);
@@ -897,6 +952,9 @@ L = [L11 L12 sparse(N,N) L14; ...
     L21 L22 sparse(N,N) L24; ...
     sparse(N,N) sparse(N,N) L33 L34; ...
     L41 L42 L43 sparse(N,N)];
+
+% B = spalloc(4*N,3*N, 3*N);
+% C = spalloc(3*N,4*N, 3*N);
 
 [~,w] = clencurt(Ny-1);
 
