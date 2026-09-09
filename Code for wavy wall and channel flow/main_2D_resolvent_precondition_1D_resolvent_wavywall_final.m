@@ -2,18 +2,9 @@ clearvars;
 close all;
 clc;
 
-% --- Choose data folder by OS (minimal edits) ---
-if isunix  % Linux/HPC
-    folderpath = pwd;  % your job's scratch working directory
-    addpath('/gpfs/homefs1/jig23007/ray_tracing_matlab/cbrewer2-master');
-elseif ispc  % Windows/local
-    %folderpath = 'E:/dedalus/Wavy Wall/flexible signed distance function/optimum_vpm_symmetric_wavywall/epsilon 0.12/dedalus_22423155_Re500/snapshots_channel/mean_v_Re500.00_c1.00';
-    folderpath = 'E:/dedalus/Wavy Wall/flexible signed distance function/optimum_vpm_symmetric_wavywall/epsilon 0.12/dedalus_45035570_Re500_NxNy_608x640/snapshots_channel/mean_v_Re500.00_c1.00';
-else
-    error('Unsupported OS.');
-end
-if ~isfolder(folderpath), error('Data folder not found: %s', folderpath); end
-cd(folderpath);
+% %% ========================= USER INPUTS ==================================
+folderpath = './'
+cd(folderpath)
 
 load data_x.mat
 load data_y.mat
@@ -24,8 +15,8 @@ load dUdy_mean_zt.mat
 load dVdx_mean_zt.mat
 load dVdy_mean_zt.mat
 
-Ny=500;
-Nx=500;
+Ny=30;
+Nx=30;
 epsilon = 0.12;
 h = 1; y0 = h;
 A1 = epsilon; A2 = epsilon;
@@ -214,6 +205,15 @@ opts.disp=1;
 
 if matrix_free
 
+    % Shared with H_fun; initialize before the main SVDS run.
+    % One row per GMRES call, in execution order (forward and adjoint).
+    global gmres_info
+    gmres_info = table('Size',[0 7], ...
+    'VariableTypes',{'double','cell','double','double','double','double','double'}, ...
+    'VariableNames',{'solve_index','direction','outer_iterations', ...
+    'inner_iterations','total_inner_iterations','flag','relres'});
+
+
     matrix_free_total_cpu_start = cputime;
     matrix_free_setup_cpu_start = cputime;
     params = add_laplacian_preconditioner(params);
@@ -226,6 +226,10 @@ if matrix_free
     matrix_free_total_cpu_time_s = cputime-matrix_free_total_cpu_start;
     sigma_mf = diag(S_mf);
     disp(table(sigma_mf,'VariableNames',{'sigma_matrix_free'}))
+    gmres_average_iterations = mean(gmres_info{:,{'inner_iterations','outer_iterations','total_inner_iterations'}},1); % [mean inner, mean outer]
+
+    disp(table(gmres_average_iterations, ...
+    'VariableNames', {'mean_inner_outer_total inner'}));
 
     matrix_free_memory_MB_a = (workspace_bytes( ...
         params,U_mf,S_mf,V_mf)+matrix_free_workspace_bytes(params))/1024^2;
@@ -750,6 +754,7 @@ end
 %H_f = Hf or H_fun = H*f is the function
 function H_f=H_fun(f,tflag,params)
 
+global gmres_info
 Ny=params.Ny;
 %Nx=params.Nx;
 N=params.N;
@@ -786,9 +791,11 @@ maxit = params.gmres_maxit;
 %% H = CL^-1B ; H* = B*(L*)^-1 C*
 %% L_inv_u_p = q , where L_fun x q = Bf; q = [u;v;w;p] so this gives us the input in input-output
 %% q = (M^-1L)^-1 M^-1Bf
-[L_inv_u_p,flag,relres,iter] = gmres(@(u_p) L_fun(u_p,tflag,params),Bf, ...
+[L_inv_u_p,flag,relres,iter,resvec] = gmres(@(u_p) L_fun(u_p,tflag,params),Bf, ...
     restart,tol,maxit,@(rhs) laplacian_preconditioner_fun(rhs,tflag,params));
 
+gmres_info(end+1,:) = {height(gmres_info)+1,{tflag}, ...
+        iter(1),iter(2),numel(resvec)-1,flag,relres};
 % if strcmp(tflag,'notransp')
 %% H_f = C*q, C = w_all^(1/2)* diag(I,I,I,0)
 %% C = w_all^(1/2)* diag(I,I,I,0)
