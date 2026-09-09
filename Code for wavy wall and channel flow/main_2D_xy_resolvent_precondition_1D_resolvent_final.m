@@ -1,7 +1,6 @@
 clearvars;
 close all;
 clc
-
 % %% ========================= USER INPUTS ==================================
 folderpath = './'
 cd(folderpath)

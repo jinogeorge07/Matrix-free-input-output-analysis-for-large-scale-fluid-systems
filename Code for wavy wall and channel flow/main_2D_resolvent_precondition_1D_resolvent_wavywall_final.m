@@ -1,7 +1,7 @@
 clearvars;
 close all;
 clc;
-
+%% Jino George, Adviser : Dr. Chang Liu, University of Connecticut
 % %% ========================= USER INPUTS ==================================
 folderpath = './'
 cd(folderpath)
@@ -15,14 +15,17 @@ load dUdy_mean_zt.mat
 load dVdx_mean_zt.mat
 load dVdy_mean_zt.mat
 
-Ny=140;
-Nx=140;
+Ny=60;
+Nx=60;
 epsilon = 0.12;
 h = 1; y0 = h;
 A1 = epsilon; A2 = epsilon;
 Lx = 2.4
 Ly1 = 1.0 + 1.0999*epsilon; % Half-height
 Re = 500;
+
+%%Compute Mask function
+main_mask_signed_distance_function_wavywall;
 
 fname = sprintf('mask_smooth_wavywall_Re%d_%dx%d_epsilon_%.2f.mat', Re, Ny, Nx, epsilon);
 load(fname);
