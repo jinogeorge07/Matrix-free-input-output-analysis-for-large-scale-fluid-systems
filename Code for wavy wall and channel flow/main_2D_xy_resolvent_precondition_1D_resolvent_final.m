@@ -35,9 +35,6 @@ compare_full_matrix = false;   % compare full vs matrix-free for current grid
 benchmark_Nx_list = [36 60];
 benchmark_Ny_list = [36 60];
 
-% benchmark_Nx_list = [24 36];
-% benchmark_Ny_list = [24 36];
-
 nsv = 1;
 opts.tol = 1e-3;
 opts.maxit = 30;
@@ -583,13 +580,8 @@ N=params.N;
 
 w_all=params.w_all;
 
-%if strcmp(tflag,'notransp')
 Bf=[f.*w_all.^(-1/2);
     zeros(N,1)];
-% else
-%     Bf=[f.*w_all.^(1/2);
-%         zeros(N,1)];
-% end
 
 %B.C. for u
 left_bc=1:Ny:N;
@@ -618,18 +610,12 @@ maxit = params.gmres_maxit;
 gmres_info(end+1,:) = {height(gmres_info)+1,{tflag}, ...
         iter(1),iter(2),numel(resvec)-1,flag,relres};
 
-% if strcmp(tflag,'notransp')
 H_f = w_all.^(1/2).*L_inv_u_p(1:3*N,1); % weighted input q, this is fed into svds
-% else
-%     H_f = w_all.^(-1/2).*L_inv_u_p(1:3*N,1);
-% end
 
 end
 
 
 function z=laplacian_preconditioner_fun(rhs,tflag,params)
-%Ny=params.Ny;
-%Nx=params.Nx;
 N=params.N;
 
 if strcmp(params.preconditioner_type,'fft_1d_laplacian')
@@ -653,9 +639,7 @@ Nx=params.Nx;
 rhs_hat=fft(reshape(rhs,Ny,Nx),[],2);
 z_hat=zeros(Ny,Nx);
 for kx_ind=1:Nx
-    %preconditioning solved based on LU decomposition
-    %z_hat(:,kx_ind)=params.laplacian_1d_factors{kx_ind}\rhs_hat(:,kx_ind);
-
+   
     %preconditioning by directly invert the matrix.
     z_hat(:,kx_ind)=params.laplacian_1d_factors{kx_ind}*rhs_hat(:,kx_ind);
 end
@@ -752,7 +736,6 @@ end
 
 
 function [H,L]=resolvent_2D_xy(params)
-% kx=params.kx;
 kz=params.kz;
 omega=params.omega;
 Ny=params.Ny;
@@ -770,23 +753,16 @@ Iy=speye(Ny);
 D1 = (2/Ly)*DM(1:Ny,1:Ny,1);
 D2 = (2/Ly)^2*DM(1:Ny,1:Ny,2);
 
-%Dy_2D = kron(Ix,Dy);
-%Dyy_2D = kron(Ix,Dyy);
-
 [~,Dx] = fourdif(Nx,1);
 Dx = (2*pi/Lx)*Dx;
 
 [~,Dxx] = fourdif(Nx,2);
 Dxx = (2*pi/Lx)^2*Dxx;
-%Dx_2D = kron(Dx,Iy);
-%Dyy_2D = kron(Dxx,Iy);
 
 I = speye(N);
 
 lplc = -kz^2*I + kron(Ix,D2) + kron(Dxx,Iy); % sparse
 
-% U0 = 1-y.^2;
-% U1 = -2*y;
 
 U = spdiags(params.U,0,N,N);
 dUdx = spdiags(params.dUdx,0,N,N);
@@ -813,9 +789,6 @@ L = [L11 L12 sparse(N,N) L14; ...
     L21 L22 sparse(N,N) L24; ...
     sparse(N,N) sparse(N,N) L33 L34; ...
     L41 L42 L43 sparse(N,N)];
-
-% B = spalloc(4*N,3*N, 3*N);
-% C = spalloc(3*N,4*N, 3*N);
 
 [~,w] = clencurt(Ny-1);
 
