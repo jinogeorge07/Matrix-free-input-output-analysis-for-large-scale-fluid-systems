@@ -26,7 +26,6 @@ idx_sp_cf = strcmp(T.MatrixFree_sparseMatrix,'sparse matrix') & strcmp(T.Channel
 idx_sp_ww = strcmp(T.MatrixFree_sparseMatrix,'sparse matrix') & strcmp(T.Channelflow_WavyWall,'Wavy wall');
  
 %% ---- Figure/axes ----
-%fig = figure('Units','normalized','Position',[0.12 0.12 0.62 0.58],'Color','w');
 fig = figure('Units','inches','Position',[1 1 16.53 8.7],'Color','w');
 ax = axes(fig); hold(ax,'on'); box(ax,'on');
  
