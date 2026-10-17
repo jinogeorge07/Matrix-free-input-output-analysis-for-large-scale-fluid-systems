@@ -200,9 +200,9 @@ if matrix_free
     % One row per GMRES call, in execution order (forward and adjoint).
     global gmres_info
     gmres_info = table('Size',[0 7], ...
-    'VariableTypes',{'double','cell','double','double','double','double','double'}, ...
-    'VariableNames',{'solve_index','direction','outer_iterations', ...
-    'inner_iterations','total_inner_iterations','flag','relres'});
+        'VariableTypes',{'double','cell','double','double','double','double','double'}, ...
+        'VariableNames',{'solve_index','direction','outer_iterations', ...
+        'inner_iterations','total_inner_iterations','flag','relres'});
 
 
     matrix_free_total_cpu_start = cputime;
@@ -220,7 +220,7 @@ if matrix_free
     gmres_average_iterations = mean(gmres_info{:,{'inner_iterations','outer_iterations','total_inner_iterations'}},1); % [mean inner, mean outer]
 
     disp(table(gmres_average_iterations, ...
-    'VariableNames', {'mean_inner_outer_total inner'}));
+        'VariableNames', {'mean_inner_outer_total inner'}));
 
     matrix_free_memory_MB_a = (workspace_bytes( ...
         params,U_mf,S_mf,V_mf)+matrix_free_workspace_bytes(params))/1024^2;
@@ -234,7 +234,7 @@ if matrix_free
         'matrix_free_total_cpu_time_s', ...
         '-v7.3');
 
-        cpu_time_table = table(matrix_free_memory_MB_a, matrix_free_setup_cpu_time_s, ...
+    cpu_time_table = table(matrix_free_memory_MB_a, matrix_free_setup_cpu_time_s, ...
         matrix_free_svd_cpu_time_s,matrix_free_total_cpu_time_s, ...
         'VariableNames',{'matrix_free_memory_MB','matrix_free_preconditioner_setup_cpu_s', ...
         'matrix_free_svds_cpu_s','matrix_free_total_cpu_s', ...
@@ -430,7 +430,7 @@ matrix_free_memory_MB = zeros(nCases,1);
 
 for iCase = 1:nCases
     params_i = rebuild_benchmark_params( ...
-    params_template,Nx_cases(iCase),Ny_cases(iCase));
+        params_template,Nx_cases(iCase),Ny_cases(iCase));
     op_size = [3*params_i.Nx*params_i.Ny,3*params_i.Nx*params_i.Ny];
 
     drawnow;
@@ -529,7 +529,7 @@ N=params.N;
 params.w=w(:);
 params.w_2D=reshape(params.w*ones(1,Nx),N,1);
 %% This is the C block matrix . as you can see no pressure is in the 4th row
-params.w_all=[params.w_2D;params.w_2D;params.w_2D]; 
+params.w_all=[params.w_2D;params.w_2D;params.w_2D];
 
 end
 
@@ -547,10 +547,10 @@ if strcmp(params.preconditioner_type,'fft_1d_laplacian')
     for kx_ind=1:Nx
         dxx_eigenvalue=-(2*pi/params.Lx)^2*wave(kx_ind)^2;
         lap_k=Dyy+(dxx_eigenvalue-params.kz^2)*speye(Ny);
+
+        %Dirichlet B.C.
         lap_k(1,:)=[1,zeros(1,Ny-1)];
-        % lap_k(1,1)=1;
         lap_k(Ny,:)=[zeros(1,Ny-1),1];
-        % lap_k(Ny,Ny)=1;
 
         %preconditioning by directly inverse.
         params.laplacian_1d_factors{kx_ind}=inv(lap_k);
@@ -687,12 +687,10 @@ function H_f=H_fun(f,tflag,params)
 
 global gmres_info
 Ny=params.Ny;
-%Nx=params.Nx;
 N=params.N;
 
 w_all=params.w_all;
 
-%if strcmp(tflag,'notransp')
 Bf=[f.*w_all.^(-1/2);
     zeros(N,1)];
 
@@ -712,14 +710,14 @@ Bf(2*N+left_bc)=0;
 Bf(2*N+right_bc)=0;
 
 tol = params.gmres_tol;
-restart = params.gmres_restart;%min(100,4*Ny);
+restart = params.gmres_restart;
 maxit = params.gmres_maxit;
 
 [L_inv_u_p,flag,relres,iter,resvec] = gmres(@(u_p) L_fun(u_p,tflag,params),Bf, ...
     restart,tol,maxit,@(rhs) laplacian_preconditioner_fun(rhs,tflag,params));
 
 gmres_info(end+1,:) = {height(gmres_info)+1,{tflag}, ...
-        iter(1),iter(2),numel(resvec)-1,flag,relres};
+    iter(1),iter(2),numel(resvec)-1,flag,relres};
 
 H_f = w_all.^(1/2).*L_inv_u_p(1:3*N,1); % weighted input q, this is fed into svds
 
@@ -751,8 +749,6 @@ Nx=params.Nx;
 rhs_hat=fft(reshape(rhs,Ny,Nx),[],2);
 z_hat=zeros(Ny,Nx);
 for kx_ind=1:Nx
-    %preconditioning solved based on LU decomposition
-    %z_hat(:,kx_ind)=params.laplacian_1d_factors{kx_ind}\rhs_hat(:,kx_ind);
 
     %preconditioning by directly invert the matrix.
     z_hat(:,kx_ind)=params.laplacian_1d_factors{kx_ind}*rhs_hat(:,kx_ind);
