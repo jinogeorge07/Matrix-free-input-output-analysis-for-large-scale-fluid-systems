@@ -10,7 +10,7 @@ folderpath = './'
 cd(folderpath)
 
 % Results file produced by the resolvent run
-results_file = 'resolvent_results_matrixfree_NxNy400_Re1500.mat';
+%results_file = 'resolvent_results_matrixfree_NxNy400_Re1500.mat';
 
 Nx = 400;
 Ny = 400;
