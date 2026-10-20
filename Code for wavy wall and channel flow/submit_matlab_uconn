@@ -1,0 +1,42 @@
+#!/bin/bash -l
+#SBATCH --job-name=matlab
+#SBATCH --time=30-00:00:00
+###SBATCH --partition=general
+###SBATCH --partition=lo-core
+#SBATCH --account=chl23026  
+#SBATCH --partition=priority # No time limit, needs to uncomment next two lines together. Priority in queue
+###SBATCH --qos=chl23026   #me_epyc 
+#SBATCH --qos=me_epyc 
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1  ## change from 4 to 1
+#SBATCH --cpus-per-task=4 
+#SBATCH --output=matlab_history_%j
+#SBATCH --mem=490G
+
+#---------------------------------------------------------------------
+# SLURM job script to run serial MATLAB
+#---------------------------------------------------------------------
+
+SUBMITDIR=$SLURM_SUBMIT_DIR
+WORKDIR=/scratch/chl23026/jig23007/matlab_$SLURM_JOB_ID
+mkdir -p "$WORKDIR" && cp -r *.m "$WORKDIR"&& cp -r *.csv "$WORKDIR" && cp -r *.mat "$WORKDIR" && cp submit_* "$WORKDIR" && cd "$WORKDIR" || exit -1
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+###module load matlab/R2022b
+module load matlab/R2025b
+
+
+##matlab -nodisplay -nosplash -nodesktop -r "linear_stability_superhydrophobic_streamwise_ChannelFlow_28Sept"
+##matlab -nodisplay -nosplash -nodesktop -r "linear_stability_Hillp_2Dmeanflow_HPC_quick1"
+##matlab -nodisplay -nosplash -nodesktop -r "linear_stability_wavywall_ChannelFlow_2Dmeanflow_HPC_krylov1"
+
+###matlab -nodisplay -nosplash -nodesktop -batch "main_2D_xy_resolvent_precondition_1D_resolvent"
+matlab -nodisplay -nosplash -nodesktop -batch "main_2D_xy_resolvent_precondition_1D_resolvent_aug27"
+
+###matlab -nodisplay -nosplash -nodesktop -r "linear_stability_Hillp_2Dmeanflow_HPC_quick3"
+
+
+echo "matlab exit code: $?"
