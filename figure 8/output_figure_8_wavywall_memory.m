@@ -11,7 +11,7 @@ LW       = 3.4;    % line width (also sets marker edge width in MATLAB)
 MS       = 24;     % marker size
 FS_LABEL = 40;      % axis label font size
 FS_TICK  = 44;      % tick label font size
-FS_LEG   = 30;      % legend font size
+FS_LEG   = 44;      % legend font size
 
 % Your colors
 % C_MF_CF = [0 0.4470 0.7410];      % blue
