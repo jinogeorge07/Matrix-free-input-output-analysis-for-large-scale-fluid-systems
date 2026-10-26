@@ -19,7 +19,6 @@ C_LP_WW = [0.8500 0.3250 0.0980]; % orange
 C_SP_CF = [0.6350 0.0780 0.1840]; % red
 C_SP_WW = [0.1059 0.6863 0.4784];   % teal/green
 
-
 %% ---- Series masks ----
 idx_mf_cf = strcmp(T.MatrixFree_sparseMatrix,'matrix free') & strcmp(T.Channelflow_WavyWall,'Channel flow');
 idx_mf_ww = strcmp(T.MatrixFree_sparseMatrix,'matrix free') & strcmp(T.Channelflow_WavyWall,'Wavy wall');

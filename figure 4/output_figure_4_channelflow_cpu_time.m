@@ -11,14 +11,13 @@ LW       = 3.4;    % line width (also sets marker edge width in MATLAB)
 MS       = 24;     % marker size
 FS_LABEL = 40;      % axis label font size
 FS_TICK  = 44;      % tick label font size
-FS_LEG   = 30;      % legend font size
+FS_LEG   = 44;      % legend font size
 
 % Your colors
 C_MF_CF = [0 0.4470 0.7410];      % blue
 %C_LP_CF = [0.8500 0.3250 0.0980]; % orange
 C_SP_CF = [0.6350 0.0780 0.1840]; % red
 C_LP_CF = [0.1059 0.6863 0.4784];   % teal/green
-
 
 %% ---- Series masks ----
 idx_mf_cf = strcmp(T.MatrixFree_sparseMatrix,'matrix free') & strcmp(T.Channelflow_WavyWall,'Channel flow');
@@ -42,14 +41,10 @@ h_mf_cf = loglog(ax, T.N(idx_mf_cf), T.CPU_sec_(idx_mf_cf), 'o-', ...
     'LineWidth', LW, 'MarkerSize', MS);
 
 % Laplacian preconditioner -- channel flow: open square, dashed line
-h_lp_cf = loglog(ax, T.N(idx_lp_cf), T.CPU_sec_(idx_lp_cf), '*--', ...
-    'Color', C_LP_CF, 'MarkerFaceColor', 'w', 'MarkerEdgeColor', C_LP_CF, ...
-    'LineWidth', LW, 'MarkerSize', MS);
-
-% % Matrix-free -- wavy wall: open square, dashed line
-% h_mf_ww = loglog(ax, T.N(idx_mf_ww), T.memory_GB_(idx_mf_ww), 's--', ...
-%     'Color', C_MF_WW, 'MarkerFaceColor', 'w', 'MarkerEdgeColor', C_MF_WW, ...
+% h_lp_cf = loglog(ax, T.N(idx_lp_cf), T.CPU_sec_(idx_lp_cf), '*--', ...
+%     'Color', C_LP_CF, 'MarkerFaceColor', 'w', 'MarkerEdgeColor', C_LP_CF, ...
 %     'LineWidth', LW, 'MarkerSize', MS);
+
 
 %% ---- Axes formatting ----
 set(ax, 'XScale', 'log', 'YScale', 'log');
@@ -70,9 +65,14 @@ set(ax, 'XTick', xt, 'YTick', yt);
 xlabel(ax, 'N (grid size)', 'FontSize', FS_LABEL, 'FontWeight', 'bold', 'FontName', FONT);
 ylabel(ax, 'CPU time (s)', 'FontSize', FS_LABEL, 'FontWeight', 'bold', 'FontName', FONT);
 
-legend(ax, [h_sp_cf h_mf_cf h_lp_cf], ...
-    {'Sparse matrix - channel flow', 'Matrix-free - channel flow', ...
-     'Sparse matrix - wavy wall',    'Matrix-free - wavy wall'}, ...
+% legend(ax, [h_sp_cf h_mf_cf h_lp_cf], ...
+%     {'Sparse matrix - channel flow', 'Matrix-free - channel flow', ...
+%      'Sparse matrix - wavy wall',    'Matrix-free - wavy wall'}, ...
+%     'Location', 'southeast', 'FontSize', FS_LEG, 'FontName', FONT, 'Box', 'off');
+
+
+legend(ax, [h_sp_cf h_mf_cf], ...
+    {'Sparse matrix', 'Matrix-free'}, ...
     'Location', 'southeast', 'FontSize', FS_LEG, 'FontName', FONT, 'Box', 'off');
 
 %% ---- Export (raster for slides/preview, vector for LaTeX) ----
@@ -84,6 +84,6 @@ hold on
 %% ---- Series masks ----
 idx_mf_cf = strcmp(T.MatrixFree_sparseMatrix,'matrix free') & strcmp(T.Channelflow_WavyWall,'Channel flow');
 idx_sp_cf = strcmp(T.MatrixFree_sparseMatrix,'sparse matrix') & strcmp(T.Channelflow_WavyWall,'Channel flow');
-idx_lp_cf = strcmp(T.MatrixFree_sparseMatrix,'laplacian') & strcmp(T.Channelflow_WavyWall,'Channel flow');
+%idx_lp_cf = strcmp(T.MatrixFree_sparseMatrix,'laplacian') & strcmp(T.Channelflow_WavyWall,'Channel flow');
  
 close all;
